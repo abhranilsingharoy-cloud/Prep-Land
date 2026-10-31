@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { usePrepLand } from '../context/PrepLandContext';
+import { sounds } from '../utils/audio';
 
 const SUPPORTED_COMPANIES = [
   'Amazon SDE-1',
@@ -631,6 +632,31 @@ export default function InterviewCoach() {
                     placeholder="Type or dictate your response here using STAR framework (Situation -> Task -> Action -> Result)..."
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 leading-relaxed font-sans"
                   />
+
+                  {/* Real-Time Speech Clarity & Filler Word Meter */}
+                  {studentAnswer.trim().length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono">
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-400">
+                          Words: <strong className="text-white">{studentAnswer.trim().split(/\s+/).filter(Boolean).length}</strong>
+                        </span>
+                        <span className="text-slate-600">|</span>
+                        <span className="text-slate-400">
+                          Pace: <strong className={verbalSeconds > 0 && Math.round((studentAnswer.trim().split(/\s+/).filter(Boolean).length / verbalSeconds) * 60) > 165 ? 'text-rose-400' : 'text-emerald-400'}>
+                            {verbalSeconds > 0 ? Math.round((studentAnswer.trim().split(/\s+/).filter(Boolean).length / verbalSeconds) * 60) : 0} WPM
+                          </strong>
+                          <span className="text-[10px] text-slate-500 ml-1">(Ideal: 120-150)</span>
+                        </span>
+                      </div>
+
+                      {/* Filler detector */}
+                      {(studentAnswer.match(/\b(like|basically|actually|um|uh|sort of|you know)\b/gi) || []).length > 0 && (
+                        <span className="text-amber-400 font-sans">
+                          ⚠️ {(studentAnswer.match(/\b(like|basically|actually|um|uh|sort of|you know)\b/gi) || []).length} filler words detected
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-slate-500">

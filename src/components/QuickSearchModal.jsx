@@ -85,6 +85,47 @@ export default function QuickSearchModal({ isOpen, onClose, onSelectResult }) {
         }
       });
     });
+
+    // Special tools and new features
+    if ('cutoff normalization predictor forecast score'.includes(q)) {
+      results.push({
+        type: 'Interactive Predictor',
+        title: 'Score Normalization & Cutoff Calculator',
+        subtitle: 'Multi-shift normalization and qualification forecast for SSC CGL & IBPS PO',
+        tab: 'cutoff',
+        icon: Lightbulb
+      });
+    }
+
+    if ('visualizer two pointers kadane algorithm simulator'.includes(q)) {
+      results.push({
+        type: 'Algorithm Visualizer',
+        title: 'Interactive DSA Step Simulator',
+        subtitle: 'Animated Two Pointers & Kadane algorithm execution',
+        tab: 'placements',
+        icon: Code2
+      });
+    }
+
+    if ('writs emergency article 32 226 352 habeas corpus mandamus'.includes(q)) {
+      results.push({
+        type: 'Polity Law Engine',
+        title: '5 Constitutional Writs & Emergency Navigator',
+        subtitle: 'Articles 32, 226, 352, 356, 360 drilldown and exam traps',
+        tab: 'govt-exams',
+        icon: Landmark
+      });
+    }
+
+    if ('mixture alligation successive discount faulty weights solver'.includes(q)) {
+      results.push({
+        type: 'Formula Solver',
+        title: 'Alligation & Successive Discount Solver',
+        subtitle: 'Instant ratio mixing and equivalent discount calculations',
+        tab: 'solver',
+        icon: BookOpen
+      });
+    }
   }
 
   return (

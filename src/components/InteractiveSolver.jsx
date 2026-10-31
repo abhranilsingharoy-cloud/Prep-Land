@@ -32,6 +32,16 @@ export default function InteractiveSolver() {
   const [falseWeight, setFalseWeight] = useState(900);
   const [markupPercent, setMarkupPercent] = useState(0);
 
+  // Tool 5: Mixture & Alligation state
+  const [alligC, setAlligC] = useState(24); // Cheaper price
+  const [alligD, setAlligD] = useState(32); // Dearer price
+  const [alligM, setAlligM] = useState(30); // Mean price
+
+  // Tool 6: Successive % & Discount state
+  const [succA, setSuccA] = useState(20);
+  const [succB, setSuccB] = useState(10);
+  const [isDiscountMode, setIsDiscountMode] = useState(false);
+
   // Calculations:
   // 1. Time & Work calculations
   const totalCapacity = lcmThree(Number(twA) || 1, Number(twB) || 1, Number(twC) || 1);
@@ -61,6 +71,24 @@ export default function InteractiveSolver() {
   const weightMultiplier = Number(trueWeight) / (Number(falseWeight) || 1);
   const totalMultiplier = markupMultiplier * weightMultiplier;
   const netProfitPct = ((totalMultiplier - 1) * 100).toFixed(2);
+
+  // 5. Alligation Calculations
+  const diffDearer = Number(alligD) - Number(alligM);
+  const diffCheaper = Number(alligM) - Number(alligC);
+  const alligGcd = gcd(Math.abs(diffDearer) || 1, Math.abs(diffCheaper) || 1);
+  const ratioCheaper = Math.max(1, Math.round(diffDearer / alligGcd));
+  const ratioDearer = Math.max(1, Math.round(diffCheaper / alligGcd));
+  const isValidAllig = Number(alligM) > Number(alligC) && Number(alligM) < Number(alligD);
+
+  // 6. Successive % Calculations
+  const valA = Number(succA) || 0;
+  const valB = Number(succB) || 0;
+  let netSuccPct = 0;
+  if (isDiscountMode) {
+    netSuccPct = valA + valB - (valA * valB) / 100;
+  } else {
+    netSuccPct = valA + valB + (valA * valB) / 100;
+  }
 
   return (
     <div className="space-y-6 pb-12">
@@ -113,6 +141,22 @@ export default function InteractiveSolver() {
             }`}
           >
             Faulty Weights
+          </button>
+          <button
+            onClick={() => setActiveTool('alligation')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTool === 'alligation' ? 'bg-teal-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Mixture & Alligation
+          </button>
+          <button
+            onClick={() => setActiveTool('successive')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTool === 'successive' ? 'bg-teal-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Successive % & Discount
           </button>
         </div>
       </div>
@@ -381,6 +425,150 @@ export default function InteractiveSolver() {
             <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
               <span className="font-bold text-slate-200">Net Profit Percentage:</span>
               <span className="text-xl font-black text-emerald-400">{netProfitPct}%</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOOL 5: MIXTURE & ALLIGATION SOLVER */}
+      {activeTool === 'alligation' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+            <h3 className="text-sm font-bold text-white">Input Mixture Ingredients</h3>
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <label className="text-slate-400 block mb-1">Cheaper Price (₹/kg):</label>
+                <input
+                  type="number"
+                  value={alligC}
+                  onChange={(e) => setAlligC(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-white"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 block mb-1">Dearer Price (₹/kg):</label>
+                <input
+                  type="number"
+                  value={alligD}
+                  onChange={(e) => setAlligD(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-white"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 block mb-1">Target Mean (₹/kg):</label>
+                <input
+                  type="number"
+                  value={alligM}
+                  onChange={(e) => setAlligM(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-white"
+                />
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
+              Rule: Mean price ($M$) must lie strictly between Cheaper ($C$) and Dearer ($D$).
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 font-mono text-xs">
+            <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wide">
+              ⚡ Cross-Alligation Breakdown:
+            </h3>
+
+            {isValidAllig ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-slate-300">
+                  <p>• Quantity of Cheaper / Quantity of Dearer = (d - m) / (m - c)</p>
+                  <p>• (Dearer - Mean) = {alligD} - {alligM} = <strong className="text-teal-400">{diffDearer}</strong></p>
+                  <p>• (Mean - Cheaper) = {alligM} - {alligC} = <strong className="text-teal-400">{diffCheaper}</strong></p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-teal-950/40 border border-teal-500/30 flex items-center justify-between">
+                  <span className="font-bold text-slate-200">Required Mixing Ratio (Cheaper : Dearer):</span>
+                  <span className="text-2xl font-black text-teal-400">{ratioCheaper} : {ratioDearer}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs font-sans">
+                ⚠️ Invalid configuration: Mean price ({alligM}) must be greater than Cheaper price ({alligC}) and less than Dearer price ({alligD}).
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TOOL 6: SUCCESSIVE % & EQUIVALENT DISCOUNT */}
+      {activeTool === 'successive' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Input Percentage Changes</h3>
+              <button
+                onClick={() => setIsDiscountMode(!isDiscountMode)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                  isDiscountMode
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                }`}
+              >
+                {isDiscountMode ? 'Mode: Successive Discounts' : 'Mode: Percentage Changes'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="text-slate-400 block mb-1">
+                  {isDiscountMode ? 'First Discount (%):' : 'First Change a (%):'}
+                </label>
+                <input
+                  type="number"
+                  value={succA}
+                  onChange={(e) => setSuccA(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-white"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 block mb-1">
+                  {isDiscountMode ? 'Second Discount (%):' : 'Second Change b (%):'}
+                </label>
+                <input
+                  type="number"
+                  value={succB}
+                  onChange={(e) => setSuccB(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 font-mono text-xs">
+            <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wide">
+              ⚡ Equivalent Net Result:
+            </h3>
+
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-slate-300">
+              {isDiscountMode ? (
+                <>
+                  <p>Formula: d1 + d2 - (d1 × d2) / 100</p>
+                  <p>= {succA} + {succB} - ({succA} × {succB}) / 100</p>
+                  <p>= {Number(succA) + Number(succB)} - {((Number(succA) * Number(succB)) / 100).toFixed(2)}</p>
+                </>
+              ) : (
+                <>
+                  <p>Formula: a + b + (a × b) / 100</p>
+                  <p>= {succA} + {succB} + ({succA} × {succB}) / 100</p>
+                  <p>= {Number(succA) + Number(succB)} + {((Number(succA) * Number(succB)) / 100).toFixed(2)}</p>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 rounded-xl bg-teal-950/40 border border-teal-500/30 flex items-center justify-between">
+              <span className="font-bold text-slate-200">
+                {isDiscountMode ? 'Single Equivalent Discount:' : 'Net Percentage Change:'}
+              </span>
+              <span className="text-2xl font-black text-teal-400">
+                {netSuccPct.toFixed(2)}%
+              </span>
             </div>
           </div>
         </div>

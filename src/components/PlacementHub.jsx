@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import MathRenderer from './MathRenderer';
 import { usePrepLand } from '../context/PrepLandContext';
+import DsaVisualizer from './DsaVisualizer';
 
 export default function PlacementHub() {
   const { stats, dsaCompleted, toggleDsaProblem } = usePrepLand();
@@ -80,6 +81,16 @@ export default function PlacementHub() {
             }`}
           >
             Core CS & SQL
+          </button>
+          <button
+            onClick={() => setSubTab('visualizer')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              subTab === 'visualizer'
+                ? 'bg-indigo-600 text-white shadow'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Algorithm Visualizer
           </button>
         </div>
       </div>
@@ -311,6 +322,11 @@ export default function PlacementHub() {
         </div>
       )}
 
+      {/* SUBTAB 4: ALGORITHM VISUALIZER */}
+      {subTab === 'visualizer' && (
+        <DsaVisualizer />
+      )}
+
       {/* SUBTAB 3: CORE CS & SQL */}
       {subTab === 'core-cs' && (
         <div className="space-y-6">
@@ -343,6 +359,11 @@ export default function PlacementHub() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* SUBTAB 4: ALGORITHM VISUALIZER */}
+      {subTab === 'visualizer' && (
+        <DsaVisualizer />
       )}
     </div>
   );

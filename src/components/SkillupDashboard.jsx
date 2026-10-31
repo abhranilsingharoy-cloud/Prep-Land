@@ -17,6 +17,7 @@ import {
   Check
 } from 'lucide-react';
 import { usePrepLand } from '../context/PrepLandContext';
+import { sounds } from '../utils/audio';
 
 export default function SkillupDashboard({ setActiveTab }) {
   const { stats, schedule, toggleScheduleTask } = usePrepLand();
@@ -283,7 +284,10 @@ export default function SkillupDashboard({ setActiveTab }) {
               {currentTasks.map((task) => (
                 <div
                   key={task.id}
-                  onClick={() => toggleScheduleTask(selectedDay, task.id)}
+                  onClick={() => {
+                    toggleScheduleTask(selectedDay, task.id);
+                    sounds.playClick();
+                  }}
                   className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
                     task.done
                       ? 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900'

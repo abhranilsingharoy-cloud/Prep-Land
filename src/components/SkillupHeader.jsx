@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Bell, ChevronDown, Sparkles, Clock, Target } from 'lucide-react';
+import { Search, Bell, ChevronDown, Sparkles, Clock, Target, Volume2, VolumeX, BarChart2, Calculator } from 'lucide-react';
 import PomodoroTimer from './PomodoroTimer';
+import { sounds } from '../utils/audio';
 
 export default function SkillupHeader({
   activeTab,
@@ -9,6 +10,7 @@ export default function SkillupHeader({
 }) {
   const [coursesOpen, setCoursesOpen] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   return (
     <header className="h-20 bg-white/80 backdrop-blur-md px-10 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
@@ -112,6 +114,16 @@ export default function SkillupHeader({
                 <span>AI Notes & Flashcards</span>
                 <span className="text-[10px] font-mono bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded">Recall</span>
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab('cutoff');
+                  setCoursesOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between"
+              >
+                <span>Cutoff & Rank Predictor</span>
+                <span className="text-[10px] font-mono bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded">Forecast</span>
+              </button>
             </div>
           )}
         </div>
@@ -159,6 +171,23 @@ export default function SkillupHeader({
           <kbd className="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded font-mono text-slate-400">
             Ctrl+K
           </kbd>
+        </button>
+
+        {/* Sound Effects Toggle */}
+        <button
+          onClick={() => {
+            const next = sounds.toggleSound();
+            setSoundEnabled(next);
+            if (next) sounds.playClick();
+          }}
+          className={`w-10 h-10 rounded-full border flex items-center justify-center transition cursor-pointer ${
+            soundEnabled
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm'
+              : 'border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
+          }`}
+          title={soundEnabled ? 'Acoustic effects enabled (click to mute)' : 'Sound muted'}
+        >
+          {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
 
         {/* Pomodoro Focus Study Timer */}

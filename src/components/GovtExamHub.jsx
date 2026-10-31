@@ -16,6 +16,7 @@ import {
 import MathRenderer from './MathRenderer';
 import { GOVT_EXAMS } from '../data/govtExamsData';
 import { usePrepLand } from '../context/PrepLandContext';
+import PolityNavigator from './PolityNavigator';
 
 // High-Yield Landmark Judgments
 const LANDMARK_JUDGMENTS = [
@@ -294,6 +295,9 @@ export default function GovtExamHub() {
               ))}
             </div>
           </div>
+
+          {/* Interactive Constitutional Writs & Emergency Navigator */}
+          <PolityNavigator />
         </div>
       )}
 

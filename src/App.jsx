@@ -14,6 +14,7 @@ import PerformanceAnalytics from './components/PerformanceAnalytics';
 import AiChatbot from './components/AiChatbot';
 import QuickSearchModal from './components/QuickSearchModal';
 import InteractiveSolver from './components/InteractiveSolver';
+import CutoffPredictor from './components/CutoffPredictor';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -85,6 +86,10 @@ function MainApp() {
 
               {activeTab === 'analytics' && (
                 <PerformanceAnalytics setActiveTab={setActiveTab} />
+              )}
+
+              {activeTab === 'cutoff' && (
+                <CutoffPredictor />
               )}
 
               {activeTab === 'ai-chat' && (

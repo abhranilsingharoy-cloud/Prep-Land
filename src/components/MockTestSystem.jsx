@@ -20,6 +20,7 @@ import {
 import MathRenderer from './MathRenderer';
 import confetti from 'canvas-confetti';
 import { usePrepLand } from '../context/PrepLandContext';
+import CutoffPredictor from './CutoffPredictor';
 
 // Exam-accurate question structures per specification
 const GENERATED_TEST_QUESTIONS = [
@@ -497,6 +498,9 @@ export default function MockTestSystem() {
               Launch Next Mock
             </button>
           </div>
+
+          {/* Interactive Multi-Shift Cutoff & Rank Forecast */}
+          <CutoffPredictor />
         </div>
       )}
     </div>
