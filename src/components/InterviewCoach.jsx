@@ -111,6 +111,42 @@ const PREP_PACKS = {
       }
     ],
     tips: 'Prime track requires clean code explanations and O(N) optimizations. Ensure strong basics in SQL Joins and OOP concepts.'
+  },
+  'AI Engineer & ML Systems (FAANG / OpenAI)': {
+    difficulty: 'Hard',
+    rounds: [
+      {
+        name: 'Round 1: GenAI & AIGC Architecture (AIGC-Interview-Book)',
+        questions: [
+          { q: 'Explain why dividing by √d_k in self-attention prevents vanishing gradients.', expected: 'Normalizes logit variance back to 1 so softmax does not saturate.' },
+          { q: 'How does QLoRA achieve 16-bit fine-tuning performance with 4-bit weights?', expected: 'NF4 optimal normal-float quantization + Double Quantization + Paged Optimizers.' },
+          { q: 'What is the KV Cache and how does PagedAttention in vLLM eliminate memory fragmentation?', expected: 'Caches Past Key/Values; partitions into non-contiguous physical blocks with virtual page table.' },
+          { q: 'Compare DPO and PPO: why does DPO not require an explicit reward model?', expected: 'DPO expresses ground-truth reward analytically in closed-form via policy probabilities.' },
+          { q: 'How does Classifier-Free Guidance (CFG) work in Latent Diffusion Models?', expected: 'Interpolates conditional and unconditional noise with scale s > 1 to enhance prompt fidelity.' }
+        ]
+      },
+      {
+        name: 'Round 2: Machine Learning System Design (interviews.ai)',
+        questions: [
+          { q: 'Design a Two-Tower video recommendation system for 100M items and 1B users.', expected: 'Candidate retrieval (DSSM + HNSW) -> Heavy Ranking (DLRM/DeepFM) -> MMR diversity.' },
+          { q: 'How do you design a real-time fraud detection pipeline with <50ms authorization SLA?', expected: 'Kafka stream -> Flink stateful velocity features -> Feast Redis lookup -> LightGBM inference.' },
+          { q: 'Design an enterprise hybrid search engine combining BM25 and Dense Vector search.', expected: 'Elasticsearch BM25 + Qdrant HNSW merged via Reciprocal Rank Fusion (RRF) -> Cross-Encoder reranker.' },
+          { q: 'How do you detect and mitigate Data Drift and Concept Drift in production ML?', expected: 'Population Stability Index (PSI) calculation on score bins; trigger retrain when PSI >= 0.25.' },
+          { q: 'How do you optimize an LLM serving cluster to maximize throughput under 200 concurrent users?', expected: 'Continuous batching (Orca) + PagedAttention (vLLM) + Grouped-Query Attention (GQA).' }
+        ]
+      },
+      {
+        name: 'Round 3: Deep Learning Math & Foundations (interviews.ai)',
+        questions: [
+          { q: 'Why did AdamW replace standard Adam for training large Transformers?', expected: 'Decoupled weight decay applies L2 shrinkage directly to weights rather than scaling by 1/√v_t.' },
+          { q: 'What is the architectural difference between LayerNorm, BatchNorm, and RMSNorm?', expected: 'RMSNorm drops mean-centering, scaling only by root-mean-square, saving 10-50% memory bandwidth.' },
+          { q: 'Why do modern LLMs use Pre-LayerNorm instead of Post-LayerNorm?', expected: 'Keeps main residual highway unobstructed, preventing gradient vanishing in 80+ layer networks.' },
+          { q: 'Mathematical formulation of XGBoost leaf weights vs Random Forest bagging.', expected: '2nd-order Taylor expansion w_j* = -Σg / (Σh + λ) vs Bootstrap sample averaging for variance reduction.' },
+          { q: 'When would you use Focal Loss over standard Cross-Entropy?', expected: 'Extreme class imbalance (e.g. 1:1000 fraud); dynamically downweights easy negative examples.' }
+        ]
+      }
+    ],
+    tips: 'Staff and FAANG panels expect quantitative latency budgets (SLA < 50ms), exact mathematical derivations, and knowledge of modern inference engines (vLLM, TensorRT-LLM).'
   }
 };
 

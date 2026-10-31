@@ -153,6 +153,71 @@ export default function QuickSearchModal({ isOpen, onClose, onSelectResult }) {
         icon: Sparkles
       });
     }
+
+    if (
+      'aigc diffusion stable diffusion dit clip lora qlora dpo kto simpo wethinkin'.includes(q) ||
+      q.includes('diffusion') ||
+      q.includes('aigc') ||
+      q.includes('lora') ||
+      q.includes('qlora') ||
+      q.includes('dpo')
+    ) {
+      results.push({
+        type: 'AIGC Interview Book',
+        title: 'AIGC, Diffusion & PEFT Masterclass (WeThinkIn)',
+        subtitle: 'DDPM/DDIM, CFG, Latent Diffusion, QLoRA NF4, and DPO alignment',
+        tab: 'genai',
+        icon: Sparkles
+      });
+    }
+
+    if (
+      'ml system design recommender two tower fraud detection ad ctr streaming boltzmannentropy interviews.ai'.includes(q) ||
+      q.includes('system design') ||
+      q.includes('recommender') ||
+      q.includes('fraud') ||
+      q.includes('two tower')
+    ) {
+      results.push({
+        type: 'ML System Design',
+        title: 'Production ML System Design Studio (interviews.ai)',
+        subtitle: 'Two-Tower Recommender, Real-time Fraud Stream, and Hybrid Search Ranking',
+        tab: 'genai',
+        icon: Monitor
+      });
+    }
+
+    if (
+      'kv cache vram calculator pagedattention vllm gpu sizing'.includes(q) ||
+      q.includes('kv cache') ||
+      q.includes('vram') ||
+      q.includes('pagedattention') ||
+      q.includes('gpu')
+    ) {
+      results.push({
+        type: 'GPU VRAM Calculator',
+        title: 'KV Cache & PagedAttention VRAM Sizing Tool',
+        subtitle: 'Dynamic GPU memory estimator for LLaMA 7B-405B with GQA and FP8/INT4',
+        tab: 'genai',
+        icon: Lightbulb
+      });
+    }
+
+    if (
+      'psi drift concept drift population stability index adamw rmsnorm foundations'.includes(q) ||
+      q.includes('psi') ||
+      q.includes('drift') ||
+      q.includes('adamw') ||
+      q.includes('rmsnorm')
+    ) {
+      results.push({
+        type: 'ML / DL Foundations',
+        title: 'AdamW, RMSNorm & PSI Drift Evaluator',
+        subtitle: 'Decoupled weight decay math, root-mean-square norm, and MLOps PSI monitor',
+        tab: 'genai',
+        icon: Landmark
+      });
+    }
   }
 
   return (
