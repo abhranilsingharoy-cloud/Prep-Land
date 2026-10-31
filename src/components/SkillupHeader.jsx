@@ -76,6 +76,16 @@ export default function SkillupHeader({
               </button>
               <button
                 onClick={() => {
+                  setActiveTab('genai');
+                  setCoursesOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between"
+              >
+                <span>Awesome GenAI Guide</span>
+                <span className="text-[10px] font-mono bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded">101-301</span>
+              </button>
+              <button
+                onClick={() => {
                   setActiveTab('govt-exams');
                   setCoursesOpen(false);
                 }}

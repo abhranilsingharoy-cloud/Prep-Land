@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, BookOpen, Code2, Landmark, Lightbulb, ArrowRight, Monitor } from 'lucide-react';
+import { Search, X, BookOpen, Code2, Landmark, Lightbulb, ArrowRight, Monitor, Sparkles } from 'lucide-react';
 import { APTITUDE_QUESTIONS, FORMULA_CHEAT_SHEET } from '../data/aptitudeQuestions';
 import { DSA_SHEET, CORE_CS_TOPICS } from '../data/placementData';
 import { GOVT_EXAMS } from '../data/govtExamsData';
@@ -134,6 +134,23 @@ export default function QuickSearchModal({ isOpen, onClose, onSelectResult }) {
         subtitle: 'Real-time screen question solver & live teleprompter inspired by ooboqoo/shiping',
         tab: 'interview-coach',
         icon: Monitor
+      });
+    }
+
+    if (
+      'genai generative ai llm transformers rag vector hnsw agents embeddings attention awesome'.includes(q) ||
+      q.includes('genai') ||
+      q.includes('rag') ||
+      q.includes('llm') ||
+      q.includes('attention') ||
+      q.includes('vector')
+    ) {
+      results.push({
+        type: 'Awesome GenAI Hub',
+        title: 'GenAI 101-301 Track & RAG Simulator',
+        subtitle: 'LLM Foundations, Scaled Dot-Product, Hybrid Vector RAG, and AI Engineer Viva Deck',
+        tab: 'genai',
+        icon: Sparkles
       });
     }
   }

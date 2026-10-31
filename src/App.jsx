@@ -15,6 +15,7 @@ import AiChatbot from './components/AiChatbot';
 import QuickSearchModal from './components/QuickSearchModal';
 import InteractiveSolver from './components/InteractiveSolver';
 import CutoffPredictor from './components/CutoffPredictor';
+import GenAiHub from './components/GenAiHub';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -90,6 +91,10 @@ function MainApp() {
 
               {activeTab === 'cutoff' && (
                 <CutoffPredictor />
+              )}
+
+              {activeTab === 'genai' && (
+                <GenAiHub onAskMentor={handleAskMentor} />
               )}
 
               {activeTab === 'ai-chat' && (
