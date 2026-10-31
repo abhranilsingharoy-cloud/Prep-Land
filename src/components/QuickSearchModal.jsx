@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, BookOpen, Code2, Landmark, Lightbulb, ArrowRight } from 'lucide-react';
+import { Search, X, BookOpen, Code2, Landmark, Lightbulb, ArrowRight, Monitor } from 'lucide-react';
 import { APTITUDE_QUESTIONS, FORMULA_CHEAT_SHEET } from '../data/aptitudeQuestions';
 import { DSA_SHEET, CORE_CS_TOPICS } from '../data/placementData';
 import { GOVT_EXAMS } from '../data/govtExamsData';
@@ -124,6 +124,16 @@ export default function QuickSearchModal({ isOpen, onClose, onSelectResult }) {
         subtitle: 'Instant ratio mixing and equivalent discount calculations',
         tab: 'solver',
         icon: BookOpen
+      });
+    }
+
+    if ('shiping 识屏 screen snip dialogue teleprompter copilot coder'.includes(q)) {
+      results.push({
+        type: 'AI Interview Copilot',
+        title: 'Shiping 识屏 Screen & Dialogue Copilot',
+        subtitle: 'Real-time screen question solver & live teleprompter inspired by ooboqoo/shiping',
+        tab: 'interview-coach',
+        icon: Monitor
       });
     }
   }

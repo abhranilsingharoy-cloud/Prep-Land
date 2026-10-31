@@ -22,6 +22,7 @@ import {
 import confetti from 'canvas-confetti';
 import { usePrepLand } from '../context/PrepLandContext';
 import { sounds } from '../utils/audio';
+import ShipingCopilot from './ShipingCopilot';
 
 const SUPPORTED_COMPANIES = [
   'Amazon SDE-1',
@@ -406,9 +407,9 @@ export default function InterviewCoach() {
         </div>
 
         {/* Mode Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-800/80 rounded-xl border border-slate-700">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-800/80 rounded-xl border border-slate-700">
           <button
-            onClick={() => setActiveMode('mode-1')}
+            onClick={() => { setActiveMode('mode-1'); sounds.playClick(); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeMode === 'mode-1' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
             }`}
@@ -416,7 +417,7 @@ export default function InterviewCoach() {
             Mode 1: Mock Interview
           </button>
           <button
-            onClick={() => setActiveMode('mode-2')}
+            onClick={() => { setActiveMode('mode-2'); sounds.playClick(); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeMode === 'mode-2' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
             }`}
@@ -424,12 +425,21 @@ export default function InterviewCoach() {
             Mode 2: Answer Evaluator
           </button>
           <button
-            onClick={() => setActiveMode('mode-3')}
+            onClick={() => { setActiveMode('mode-3'); sounds.playClick(); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeMode === 'mode-3' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
             }`}
           >
             Mode 3: Company Prep Pack
+          </button>
+          <button
+            onClick={() => { setActiveMode('mode-4'); sounds.playClick(); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              activeMode === 'mode-4' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-indigo-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3 h-3 text-indigo-300" />
+            <span>Mode 4: 识屏 Shiping Copilot</span>
           </button>
         </div>
       </div>
@@ -857,6 +867,11 @@ export default function InterviewCoach() {
             </div>
           )}
         </div>
+      )}
+
+      {/* MODE 4: 识屏 SHIPING AI SCREEN & DIALOGUE COPILOT */}
+      {activeMode === 'mode-4' && (
+        <ShipingCopilot />
       )}
     </div>
   );
