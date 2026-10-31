@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Award,
   Clock,
@@ -15,12 +15,19 @@ import {
   Zap,
   TrendingUp,
   AlertTriangle,
-  Flame
+  Flame,
+  Shield,
+  ShieldAlert,
+  AlertOctagon,
+  Lock,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import MathRenderer from './MathRenderer';
 import confetti from 'canvas-confetti';
 import { usePrepLand } from '../context/PrepLandContext';
 import CutoffPredictor from './CutoffPredictor';
+import { sounds } from '../utils/audio';
 
 // Exam-accurate question structures per specification
 const GENERATED_TEST_QUESTIONS = [
@@ -90,7 +97,137 @@ export default function MockTestSystem() {
   const [markedForReview, setMarkedForReview] = useState({});
   const [timeLeft, setTimeLeft] = useState(300); // 5 mins demo
 
+  // Anti-Cheating & AI Proctor State
+  const [antiCheatingEnabled, setAntiCheatingEnabled] = useState(true);
+  const [violationsCount, setViolationsCount] = useState(0);
+  const [violationsLog, setViolationsLog] = useState([]);
+  const [activeWarningModal, setActiveWarningModal] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [wasDisqualified, setWasDisqualified] = useState(false);
+  const lastViolationRef = useRef(0);
+
   const questions = GENERATED_TEST_QUESTIONS;
+
+  const requestExamFullscreen = () => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      }
+    } catch (e) {}
+  };
+
+  const exitExamFullscreen = () => {
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+  };
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFull = Boolean(document.fullscreenElement);
+      setIsFullscreen(isFull);
+      if (testStarted && !testSubmitted && antiCheatingEnabled && !isFull) {
+        registerViolation('Exited Fullscreen Examination Mode');
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [testStarted, testSubmitted, antiCheatingEnabled]);
+
+  // Anti-Cheating Window Blur, Tab Switch, Copy & Shortcut Blockers
+  useEffect(() => {
+    if (!testStarted || testSubmitted || !antiCheatingEnabled) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        registerViolation('Tab Switched / Browser Minimized');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      registerViolation('Window Focus Lost (Switched to Another App / Desktop)');
+    };
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      registerViolation('Right-click / Context Menu Attempt Blocked');
+    };
+
+    const handleCopy = (e) => {
+      e.preventDefault();
+      registerViolation('Clipboard Copy Attempt Blocked');
+    };
+
+    const handleKeyDown = (e) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ['c', 'v', 'u', 't', 'w', 'p'].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+        registerViolation(`Blocked Key Shortcut: ${e.ctrlKey ? 'Ctrl' : 'Cmd'}+${e.key.toUpperCase()}`);
+      }
+      if (e.key === 'F12') {
+        e.preventDefault();
+        registerViolation('Developer Tools Shortcut (F12) Blocked');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [testStarted, testSubmitted, antiCheatingEnabled]);
+
+  const registerViolation = (reason) => {
+    if (!antiCheatingEnabled || testSubmitted) return;
+    const now = Date.now();
+    // Debounce duplicate events within 1200ms
+    if (now - lastViolationRef.current < 1200) return;
+    lastViolationRef.current = now;
+
+    const timeStr = new Date().toLocaleTimeString();
+    sounds.playClick();
+
+    setViolationsCount((prevCount) => {
+      const newCount = prevCount + 1;
+      const newLog = {
+        time: timeStr,
+        reason,
+        violationNumber: newCount,
+        maxAllowed: 3
+      };
+      setViolationsLog((prevLog) => [...prevLog, newLog]);
+
+      if (newCount >= 3) {
+        setWasDisqualified(true);
+        setActiveWarningModal(null);
+        handleSubmitTest(true);
+      } else {
+        setActiveWarningModal({
+          reason,
+          count: newCount,
+          time: timeStr
+        });
+      }
+      return newCount;
+    });
+  };
 
   useEffect(() => {
     if (!testStarted || testSubmitted) return;
@@ -99,7 +236,7 @@ export default function MockTestSystem() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmitTest();
+          handleSubmitTest(false);
           return 0;
         }
         return prev - 1;
@@ -116,6 +253,14 @@ export default function MockTestSystem() {
     setAnswers({});
     setMarkedForReview({});
     setTimeLeft(300);
+    setViolationsCount(0);
+    setViolationsLog([]);
+    setActiveWarningModal(null);
+    setWasDisqualified(false);
+
+    if (antiCheatingEnabled) {
+      requestExamFullscreen();
+    }
   };
 
   const handleSelectOption = (optLetter) => {
@@ -123,8 +268,12 @@ export default function MockTestSystem() {
     setAnswers((prev) => ({ ...prev, [qId]: optLetter }));
   };
 
-  const handleSubmitTest = () => {
+  const handleSubmitTest = (disqualified = false) => {
     setTestSubmitted(true);
+    exitExamFullscreen();
+    if (disqualified) {
+      setWasDisqualified(true);
+    }
 
     // Sync mock completion and question logs with live state
     setStats((prev) => ({
@@ -140,9 +289,11 @@ export default function MockTestSystem() {
       }
     });
 
-    try {
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-    } catch (e) {}
+    if (!disqualified) {
+      try {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      } catch (e) {}
+    }
   };
 
   // Evaluation calculations
@@ -236,11 +387,50 @@ export default function MockTestSystem() {
             </div>
           </div>
 
+          {/* Anti-Cheating & AI Proctor Toggle Card */}
+          <div className="p-4 rounded-xl bg-slate-850 border border-slate-750 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <div>
+                  <span className="text-xs font-bold text-white block">Strict Anti-Cheating & AI Proctor</span>
+                  <span className="text-[10px] text-slate-400">Enforces Fullscreen, Tab Switch Monitoring & Copy Blocker</span>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={antiCheatingEnabled}
+                  onChange={(e) => setAntiCheatingEnabled(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+
+            {antiCheatingEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-300 font-sans pt-1">
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Auto Fullscreen Lock</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2">
+                  <AlertOctagon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span>Max 3 Tab Switch Warnings</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>No Copy / Paste / Shortcuts</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleStartTest}
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition hover:scale-[1.01]"
           >
-            Generate & Launch Mock Test
+            Launch Proctored Mock Test
           </button>
         </div>
       )}
@@ -249,14 +439,45 @@ export default function MockTestSystem() {
       {testStarted && !testSubmitted && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-4">
-            {/* Top Bar with Timer */}
-            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            {/* Top Bar with Timer & AI Proctor Status */}
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-teal-400 border border-slate-700">
                   {currentQ.section}
                 </span>
                 <span className="text-xs text-slate-400">• {currentQ.topic}</span>
               </div>
+
+              {antiCheatingEnabled && (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800 border border-slate-700">
+                    <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[11px] font-semibold text-slate-200">AI Proctor Active</span>
+                  </div>
+
+                  <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border font-mono text-[11px] font-bold ${
+                    violationsCount === 0
+                      ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                      : violationsCount === 1
+                      ? 'bg-amber-950/40 border-amber-500/30 text-amber-300'
+                      : 'bg-rose-950/50 border-rose-500 text-rose-300 animate-pulse'
+                  }`}>
+                    <AlertOctagon className="w-3.5 h-3.5" />
+                    <span>Warnings: {violationsCount} / 3</span>
+                  </div>
+
+                  {!isFullscreen && (
+                    <button
+                      onClick={requestExamFullscreen}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-[11px] font-bold transition"
+                      title="Click to restore fullscreen view"
+                    >
+                      <Maximize className="w-3 h-3" />
+                      <span>Fullscreen Lock</span>
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-xs font-bold ${
@@ -371,10 +592,54 @@ export default function MockTestSystem() {
               })}
             </div>
             <button
-              onClick={handleSubmitTest}
+              onClick={() => handleSubmitTest(false)}
               className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs mt-3 shadow"
             >
               Finish & Score
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Anti-Cheating Violation Alert Modal Overlay */}
+      {activeWarningModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-6 text-center space-y-5 shadow-2xl shadow-rose-950/60 animate-in zoom-in-95">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
+              <ShieldAlert className="w-9 h-9 animate-bounce" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-rose-400 block mb-1">
+                EXAM PROCTOR WARNING {activeWarningModal.count} OF 3
+              </span>
+              <h3 className="text-xl font-black text-white">
+                Prohibited Window Switch Detected
+              </h3>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-left space-y-1.5 text-slate-300">
+              <p>• <strong>Incident:</strong> <span className="text-rose-300 font-semibold">{activeWarningModal.reason}</span></p>
+              <p>• <strong>Timestamp:</strong> <span className="text-slate-400 font-mono">{activeWarningModal.time}</span></p>
+              <p>• <strong>Strikes Logged:</strong> <span className="text-amber-400 font-bold">{activeWarningModal.count} / 3 Maximum</span></p>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed font-sans">
+              In official competitive exams (TCS iON, SSC, UPSC, IBPS), minimizing the browser or switching applications results in immediate disqualification.
+              {activeWarningModal.count < 3
+                ? ` You have ${3 - activeWarningModal.count} warning(s) remaining before automatic exam submission.`
+                : ' Automatic exam termination threshold reached.'}
+            </p>
+
+            <button
+              onClick={() => {
+                setActiveWarningModal(null);
+                requestExamFullscreen();
+                sounds.playClick();
+              }}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-rose-500/20 transition hover:scale-[1.02]"
+            >
+              I Understand — Return to Fullscreen Exam
             </button>
           </div>
         </div>
@@ -393,6 +658,52 @@ export default function MockTestSystem() {
             <h3 className="text-lg font-bold text-white tracking-wider">
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             </h3>
+          </div>
+
+          {/* Anti-Cheating & Proctoring Forensic Audit Card */}
+          <div className={`p-5 rounded-2xl border space-y-3 font-mono ${
+            wasDisqualified
+              ? 'bg-rose-950/40 border-rose-500/60 text-rose-200'
+              : violationsLog.length > 0
+              ? 'bg-amber-950/30 border-amber-500/50 text-amber-200'
+              : 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+          }`}>
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="font-bold text-sm flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                🛡️ PROCTORING & INTEGRITY AUDIT REPORT
+              </span>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-black/40 border border-white/10">
+                {wasDisqualified
+                  ? 'DISQUALIFIED (3/3 VIOLATIONS)'
+                  : violationsLog.length === 0
+                  ? '100% CLEAN INTEGRITY AUDIT'
+                  : `FLAGGED (${violationsLog.length} INCIDENTS)`}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 text-xs font-sans">
+              {wasDisqualified && (
+                <p className="text-rose-300 font-bold">
+                  🚫 Test was automatically submitted early due to repeated window switching / minimizing outside the examination window.
+                </p>
+              )}
+              {violationsLog.length === 0 ? (
+                <p className="text-emerald-300 text-xs">
+                  Zero tab switches, zero window blurs, and zero copy-paste attempts were detected. Verified 100% compliant with official examination security protocols.
+                </p>
+              ) : (
+                <div className="space-y-1.5 pt-1 font-mono text-[11px]">
+                  <p className="font-bold text-slate-300">Logged Security Incident Timeline:</p>
+                  {violationsLog.map((log, lIdx) => (
+                    <div key={lIdx} className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/5">
+                      <span>[{log.time}] Incident #{log.violationNumber}: {log.reason}</span>
+                      <span className="text-rose-400 font-bold">Warning Logged</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Score Summary */}
